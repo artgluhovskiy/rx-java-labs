@@ -1,7 +1,6 @@
 package org.art.rx.devoxx.sample;
 
 import rx.Observable;
-import rx.Subscription;
 import rx.schedulers.Schedulers;
 
 import java.util.Arrays;
