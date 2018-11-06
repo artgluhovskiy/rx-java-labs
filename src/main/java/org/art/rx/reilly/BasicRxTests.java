@@ -8,6 +8,7 @@ import io.reactivex.schedulers.Schedulers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.DayOfWeek;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
@@ -76,5 +77,38 @@ public class BasicRxTests {
                 .subscribe(System.out::println);
     }
 
+    @Test
+    @DisplayName("Flating observables - uses concurrent subscriptions internally")
+    void test5() throws InterruptedException {
+        Observable.just(DayOfWeek.SUNDAY, DayOfWeek.MONDAY)
+                .flatMap(this::loadRecordsFor)
+                .subscribe(System.out::println);
+        TimeUnit.SECONDS.sleep(5);
+    }
 
+    @Test
+    @DisplayName("Concatenating observables - doesn't use concurrent subscription internally")
+    void test6() throws InterruptedException {
+        Observable.just(DayOfWeek.SUNDAY, DayOfWeek.MONDAY)
+                .concatMap(this::loadRecordsFor)
+                .subscribe(System.out::println);
+        TimeUnit.SECONDS.sleep(5);
+    }
+
+    private Observable<String> loadRecordsFor(DayOfWeek day) {
+        switch (day) {
+            case SUNDAY:
+                return Observable
+                        .interval(90, TimeUnit.MILLISECONDS)
+                        .take(5)
+                        .map(i -> "Sun-" + i + " Thread-" + Thread.currentThread());
+            case MONDAY:
+                return Observable
+                        .interval(90, TimeUnit.MILLISECONDS)
+                        .take(5)
+                        .map(i -> "Mon-" + i + " Thread-" + Thread.currentThread());
+            default:
+                return Observable.empty();
+        }
+    }
 }
