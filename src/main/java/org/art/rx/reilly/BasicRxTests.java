@@ -2,7 +2,6 @@ package org.art.rx.reilly;
 
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
-import io.reactivex.Scheduler;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import org.junit.jupiter.api.DisplayName;
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.DayOfWeek;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 public class BasicRxTests {
 
@@ -110,5 +108,70 @@ public class BasicRxTests {
             default:
                 return Observable.empty();
         }
+    }
+
+    @Test
+    @DisplayName("ObservableFromArray, ObservableMap, ObservableSubscribeOn debugging - non blocking")
+    void test7() {
+        Observable.just("One", "Two", "Three")
+                .map(s -> {
+                    TimeUnit.SECONDS.sleep(1);
+                    return s + "!";
+                })
+                .subscribeOn(Schedulers.computation())
+                .subscribe(System.out::println);
+    }
+
+    @Test
+    @DisplayName("ObservableFromArray, ObservableMap, ObservableSubscribeOn debugging - blocking")
+    void test8() {
+        Observable.just("One", "Two", "Three")
+                .map(s -> {
+                    TimeUnit.SECONDS.sleep(1);
+                    return s + "!";
+                })
+                .forEach(s -> System.out.println("forEach: Thread: " + Thread.currentThread()));
+    }
+
+    @Test
+    @DisplayName("Lazy computations - defer()")
+    void test9() {
+        Observable.defer(
+                () -> Observable.just(compute())
+        ).map(val -> val * 3);
+    }
+
+    private int compute() throws InterruptedException {
+        System.out.println("Sleeping...");
+        TimeUnit.SECONDS.sleep(5);
+        return 1;
+    }
+
+    @Test
+    @DisplayName("onErrorResumeNext - error handling - Observable backup")
+    void test10() {
+        Observable.just("One", "Two", "Three")
+                .map(item -> {
+                    if (item.startsWith("Tw")) {
+                        throw new Exception();
+                    }
+                    return item + "!";
+                })
+                .onErrorResumeNext(Observable.just("No Problem"))
+                .map(String::toUpperCase)
+                .subscribe(System.out::println);
+    }
+
+    @Test
+    @DisplayName("Lazy observables concatenation")
+    void test11() {
+        Observable.defer(() -> {
+            System.out.println("First observable activation");
+            return Observable.fromArray("One", "Two", "Three");
+        }).concatWith(Observable.defer(() -> {
+            System.out.println("Second observable activation");
+            return Observable.just("Four", "Five");
+        })).take(3)
+        .subscribe(System.out::println);
     }
 }
