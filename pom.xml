@@ -67,6 +67,13 @@
         </dependency>
 
         <dependency>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxnetty-tcp</artifactId>
+            <version>0.5.3-rc.1</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.twitter4j</groupId>
             <artifactId>twitter4j-core</artifactId>
             <version>${twitter4j.version}</version>
